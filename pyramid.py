@@ -30,13 +30,50 @@ def reduce(inp_img, size, fac):
 def expand(inp_img, fac):
 	return zoomin(inp_img, fac)
 
+def get_gaussian(img, lvls, size, fac):
+	gaussian = []
+
+	for i in range(0, lvls):
+		gaussian.append(img)
+		img = reduce(img, size, fac)
+
+	return gaussian
+
+def get_laplacian(img, lvls, size, fac):
+	laplacian = []
+
+	for i in range(0, lvls):
+		temp_img = reduce(img, size, fac)
+		laplacian.append(img - expand(temp_img, fac))
+		img = temp_img
+	laplacian.append(img)
+
+	return laplacian
+
+def recreate(lapl, fac):
+	img = lapl[-1]
+
+	for i in range(1, len(lapl)):
+		ind = len(lapl) - i - 1
+		img = expand(img, fac) + lapl[ind]
+
+	return img
+
 img = cv2.imread('example.jpg')
 
 lvls = 5
+size = 5
+fac = 2
 
-gaussian = []
+# gaussian = get_gaussian(img, lvls, size, fac)
+laplacian = get_laplacian(img, lvls, size, fac)
+orig = recreate(laplacian, fac)
+cv2.imwrite('recreate.jpg', orig)
 
-for i in range(0, lvls):
-	gaussian.append(img)
-	cv2.imwrite('gauss' + str(i) + '.jpg', img)
-	img = reduce(img, 5, 2)
+
+
+# for i in range(0, len(gaussian)):
+# 	cv2.imwrite('gauss' + str(i) + '.jpg', gaussian[i])
+
+# for i in range(0, len(laplacian)):
+# 	cv2.imwrite('lapl' + str(i) + '.jpg', laplacian[i])
