@@ -5,18 +5,10 @@ from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
 import math
 
-
-
-lis_im1 = []
-lis_im2 = []
-
-alpha = 0.5
-lis_im_m = []
-
 img1 = cv.imread('trump.jpg')
 
-img_dis = np.zeros(img2.shape, dtype = img2.dtype)
-img_typ = np.zeros(img2.shape, dtype = int)
+img_dis = np.zeros(img1.shape, dtype = img1.dtype)
+img_typ = np.zeros(img1.shape, dtype = int)
 
 narrow_band = []
 

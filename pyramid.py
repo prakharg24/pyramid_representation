@@ -1,5 +1,7 @@
 import cv2
 import numpy as np
+import sys
+from scipy import sparse
 
 # inp = cv2.imread('apple_high.jpg')
 # inp = cv2.resize(inp, (1024, 1024))
@@ -76,23 +78,59 @@ def mosaic(lapl1, lapl2, size, fac):
 
 	return recreate(new_lap, size, fac)
 
+def create_gaussian(img, lvls, size, fac):
+	gaussian = get_gaussian(img, lvls, size, fac)
+
+	for i in range(0, len(gaussian)):
+		cv2.imwrite('gauss' + str(i) + '.jpg', gaussian[i])
+
+
+def create_laplacian(img, lvls, size, fac):
+	laplacian = get_laplacian(img, lvls, size, fac)
+	
+	for i in range(0, len(laplacian)):
+		cv2.imwrite('lapl' + str(i) + '.jpg', laplacian[i])
+
+	rec = recreate(laplacian1, size, fac)
+	cv2.imwrite('recreated.jpg', rec)
+
+def compress(img, lvls, size, fac):
+	print("Old Image Size : ", img.nbytes)
+
+	laplacian = get_laplacian(img, lvls, size, fac)
+
+	uncom_size = 0
+	com_size = 0
+	for ele in laplacian1:
+		for i in range(0, 3):
+			temp_ele = ele[:, :, i]
+			com_ele = sparse.csr_matrix(temp_ele)
+			uncom_size += temp_ele.nbytes
+			com_size += com_ele.data.nbytes
+
+	print("Laplacian Pyramid Size (Numpy Array) : ", uncom_size)
+	print("Laplacian Pyramid Size (Sparse Matrix) : ", uncom_size)
+	
+def create_mosaic(img1, img2, lvls, size, fac):
+	laplacian1 = get_laplacian(img1, lvls, size, fac)
+	laplacian2 = get_laplacian(img2, lvls, size, fac)
+	joined = mosaic(laplacian1, laplacian2, size, fac)
+
+	joined = mosaic(laplacian1, laplacian2, size, fac)
+	cv2.imwrite('mosaic.jpg', joined)
+
+
 img1 = cv2.imread('apple_high.jpg')
 img2 = cv2.imread('orange.jpg')
 
-lvls = 5
+img1 = np.array(img1, dtype=float)
+img2 = np.array(img2, dtype=float)
+
+lvls = 4
 size = 5
 fac = 2
 
-# gaussian = get_gaussian(img1, lvls, size, fac)
-laplacian1 = get_laplacian(img1, lvls, size, fac)
-# laplacian2 = get_laplacian(img2, lvls, size, fac)
-joined = recreate(laplacian1, size, fac)
-cv2.imwrite('zip.jpg', joined)
-
-
-
-# for i in range(0, len(gaussian)):
-# 	cv2.imwrite('gauss' + str(i) + '.jpg', gaussian[i])
-
-# for i in range(0, len(laplacian)):
-# 	cv2.imwrite('lapl' + str(i) + '.jpg', laplacian[i])
+create_gaussian(img1, lvls, size, fac)
+# create_laplacian(img1, lvls, size, fac)
+# compress(img1, lvls, size, fac)
+# create_mosaic(img1, img2, lvls, size, fac)
