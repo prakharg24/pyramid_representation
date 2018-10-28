@@ -1,6 +1,11 @@
 import cv2
 import numpy as np
 
+# inp = cv2.imread('apple_high.jpg')
+# inp = cv2.resize(inp, (1024, 1024))
+# cv2.imwrite('apple_high.jpg', inp)
+# exit()
+
 def zoomout(inp_img, zoom):
 	new_img = np.zeros((int(len(inp_img)/zoom), int(len(inp_img[0])/zoom), 3))
 
@@ -27,8 +32,8 @@ def reduce(inp_img, size, fac):
 	blur = cv2.GaussianBlur(inp_img,(size,size),0)
 	return zoomout(blur, fac)
 
-def expand(inp_img, fac):
-	return zoomin(inp_img, fac)
+def expand(inp_img, size, fac):
+	return cv2.GaussianBlur(zoomin(inp_img, fac), (size, size), 0)
 
 def get_gaussian(img, lvls, size, fac):
 	gaussian = []
@@ -44,31 +49,45 @@ def get_laplacian(img, lvls, size, fac):
 
 	for i in range(0, lvls):
 		temp_img = reduce(img, size, fac)
-		laplacian.append(img - expand(temp_img, fac))
+		laplacian.append(img - expand(temp_img, size, fac))
 		img = temp_img
 	laplacian.append(img)
 
 	return laplacian
 
-def recreate(lapl, fac):
+def recreate(lapl, size, fac):
 	img = lapl[-1]
 
 	for i in range(1, len(lapl)):
 		ind = len(lapl) - i - 1
-		img = expand(img, fac) + lapl[ind]
+		img = expand(img, size, fac) + lapl[ind]
 
 	return img
 
-img = cv2.imread('example.jpg')
+def mosaic(lapl1, lapl2, size, fac):
+	new_lap = []
+	for ele1, ele2 in zip(lapl1, lapl2):
+		for i in range(0, len(ele1)):
+			for j in range(0, int(len(ele1[0])/2)):
+				ele1[i][j][0] = ele2[i][j][0]
+				ele1[i][j][1] = ele2[i][j][1]
+				ele1[i][j][2] = ele2[i][j][2]
+		new_lap.append(ele1)
+
+	return recreate(new_lap, size, fac)
+
+img1 = cv2.imread('apple_high.jpg')
+img2 = cv2.imread('orange.jpg')
 
 lvls = 5
 size = 5
 fac = 2
 
-# gaussian = get_gaussian(img, lvls, size, fac)
-laplacian = get_laplacian(img, lvls, size, fac)
-orig = recreate(laplacian, fac)
-cv2.imwrite('recreate.jpg', orig)
+# gaussian = get_gaussian(img1, lvls, size, fac)
+laplacian1 = get_laplacian(img1, lvls, size, fac)
+# laplacian2 = get_laplacian(img2, lvls, size, fac)
+joined = recreate(laplacian1, size, fac)
+cv2.imwrite('zip.jpg', joined)
 
 
 
